@@ -310,51 +310,54 @@
   }
 
   function handleQuizClick(xPx, yPx) {
-    if (!currentTarget || waiting) return;
+  if (!currentTarget || waiting) return;
 
-    const normX = xPx / canvas.width;
-    const normY = yPx / canvas.height;
+  waiting = true; // lås med det samme
 
-    const clickedAbbr = findClickedState(xPx, yPx);
-    const clickedName = STATE_NAMES[clickedAbbr] || clickedAbbr;
-    const targetName = STATE_NAMES[currentTarget] || currentTarget;
+  const normX = xPx / canvas.width;
+  const normY = yPx / canvas.height;
 
-    roundQuestions += 1;
+  const clickedAbbr = findClickedState(xPx, yPx);
+  const clickedName = STATE_NAMES[clickedAbbr] || clickedAbbr;
+  const targetName = STATE_NAMES[currentTarget] || currentTarget;
 
-    // afstand til målstat
-    const targetPos = STATE_POS_NORM[currentTarget];
-    let inRange = false;
-    if (targetPos) {
-      const dxT = normX - targetPos.x;
-      const dyT = normY - targetPos.y;
-      const dist = Math.sqrt(dxT * dxT + dyT * dyT);
-      const tol = getTolerance(currentTarget);
-      inRange = dist <= tol;
-    }
+  roundQuestions += 1;
 
-    // Vis tydeligt hvad brugeren faktisk klikkede på
-    currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
+  const targetPos = STATE_POS_NORM[currentTarget];
+  let inRange = false;
 
-    if (clickedAbbr === currentTarget && inRange) {
-      roundCorrect += 1;
-      const prefix = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
-      feedbackEl.textContent =
-        `${prefix} Det var rigtigt – den stat er ${targetName} (${currentTarget}).`;
-    } else {
-      const prefix = NEGATIVE_FEEDBACK[Math.floor(Math.random() * NEGATIVE_FEEDBACK.length)];
-      feedbackEl.textContent =
-        `${prefix} Den rigtige var ${targetName} (${currentTarget}).`;
-    }
-
-    drawMarker(currentTarget, "black");
-    updateProgress();
-
-    waiting = true;
-    setTimeout(() => {
-      waiting = false;
-      startNextQuestion();
-    }, 3000); // ca. 3 sekunders pause
+  if (targetPos) {
+    const dxT = normX - targetPos.x;
+    const dyT = normY - targetPos.y;
+    const dist = Math.sqrt(dxT * dxT + dyT * dyT);
+    const tol = getTolerance(currentTarget);
+    inRange = dist <= tol;
   }
+
+  // VIS hvad brugeren ramte og lad det stå i 3 sekunder
+  currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
+
+  if (clickedAbbr === currentTarget && inRange) {
+    roundCorrect += 1;
+    const prefix = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
+    feedbackEl.textContent =
+      `${prefix} Det var rigtigt – ${targetName} (${currentTarget}).`;
+  } else {
+    const prefix = NEGATIVE_FEEDBACK[Math.floor(Math.random() * NEGATIVE_FEEDBACK.length)];
+    feedbackEl.textContent =
+      `${prefix} Den rigtige var ${targetName} (${currentTarget}).`;
+  }
+
+  drawMarker(currentTarget, "black");
+  updateProgress();
+
+  // Tving 3 sekunders pause uden mulighed for at skippe
+  setTimeout(() => {
+    waiting = false;
+    startNextQuestion();
+  }, 3000);
+}
+
 
   function handleClick(event) {
     if (!mapLoaded) return;
