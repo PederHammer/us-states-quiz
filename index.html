@@ -396,7 +396,7 @@ function handleQuizClick(xPx, yPx) {
   currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
 
   if (clickedAbbr === currentTarget && inRange) {
-    **roundCorrect += 1;**   // ← denne linje er den vigtige
+    roundCorrect += 1;   // ← denne linje er den vigtige
     const prefix =
       POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
     feedbackEl.textContent =
