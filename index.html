@@ -36,7 +36,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      pointer-events: none;
+      pointer-events: none; /* vi klikker på canvas, men tegner også her */
     }
     .info {
       margin-top: 12px;
@@ -59,11 +59,6 @@
       font-size: 0.85rem;
       color: #666;
     }
-    .calibration-hint {
-      margin-top: 8px;
-      font-size: 0.85rem;
-      color: #aa0000;
-    }
   </style>
 </head>
 <body>
@@ -82,7 +77,6 @@
     <div id="current-state">Indlæser kort...</div>
     <div id="feedback"></div>
     <div id="progress"></div>
-    <div id="calibration-hint" class="calibration-hint"></div>
   </div>
 
   <p class="note">
@@ -111,47 +105,67 @@
   ];
 
   const STATE_NAMES = Object.fromEntries(STATES);
-  const ALL_ABBR = STATES.map(([abbr]) => abbr);
 
-  // ASCII-model (grove koordinater – bruges kun som fallback før kalibrering)
-  const ASCII_WIDTH = 62;
-  const ASCII_HEIGHT = 18;
-  const STATE_POS_ASCII = {
-    AK: [26, 16], HI: [36, 17],
-    WA: [12, 3],  OR: [12, 5],  CA: [12, 8],
-    ID: [17, 4],  MT: [21, 3],  WY: [21, 5],
-    NV: [17, 7],  UT: [19, 7],  CO: [23, 7],
-    AZ: [17, 10], NM: [21, 10],
-    ND: [25, 3],  SD: [25, 5],  NE: [26, 7],
-    KS: [26, 9],  OK: [27, 10], TX: [27, 11],
-    MN: [30, 4],  IA: [30, 6],  MO: [30, 8],
-    WI: [32, 4],  IL: [32, 6],  MI: [35, 4],
-    IN: [34, 6],  OH: [36, 6],
-    AR: [31, 9],  LA: [31, 11], MS: [33, 11],
-    AL: [35, 11], TN: [35, 9],  KY: [34, 8],
-    GA: [37, 11], SC: [39,10],  NC: [40, 9], FL: [40,12],
-    WV: [38, 7],  VA: [40, 8],  PA: [40, 6],
-    NY: [42, 5],  NJ: [42, 7],  DE: [42, 8], MD: [44, 8],
-    VT: [44, 4],  NH: [46, 4],  ME: [48, 3],
-    MA: [46, 5],  RI: [46, 6],  CT: [44, 6],
+  // DINE KALIBREREDE KOORDINATER
+  const STATE_POS_NORM = {
+    "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
+    "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
+    "AZ": { "x": 0.24203096539162114, "y": 0.5856135358931484 },
+    "AR": { "x": 0.5817395264116576, "y": 0.5898448475997774 },
+    "CA": { "x": 0.11999089253187614, "y": 0.4741889942852499 },
+    "CO": { "x": 0.3558743169398907, "y": 0.44739068680993255 },
+    "CT": { "x": 0.8822859744990893, "y": 0.29224259090020055 },
+    "DE": { "x": 0.8549635701275046, "y": 0.40084625803701296 },
+    "FL": { "x": 0.7848360655737705, "y": 0.7774329999269989 },
+    "GA": { "x": 0.7429417122040073, "y": 0.634978839137154 },
+    "HI": { "x": 0.35860655737704916, "y": 0.8578279223529509 },
+    "ID": { "x": 0.23383424408014572, "y": 0.23723553871402284 },
+    "IL": { "x": 0.6272768670309654, "y": 0.4191819420990722 },
+    "IN": { "x": 0.6764571948998178, "y": 0.41636106762798614 },
+    "IA": { "x": 0.5562386156648452, "y": 0.3585331409707224 },
+    "KS": { "x": 0.48064663023679416, "y": 0.47842030599187896 },
+    "KY": { "x": 0.7028688524590164, "y": 0.482651617698508 },
+    "LA": { "x": 0.5862932604735883, "y": 0.7196050732697351 },
+    "ME": { "x": 0.9168943533697632, "y": 0.15260930458144173 },
+    "MD": { "x": 0.8276411657559198, "y": 0.3937940718592979 },
+    "MA": { "x": 0.8950364298724954, "y": 0.2598025344827111 },
+    "MI": { "x": 0.6755464480874317, "y": 0.2330042270073938 },
+    "MN": { "x": 0.5489526411657559, "y": 0.21043723123870547 },
+    "MS": { "x": 0.6327413479052824, "y": 0.6589562721413853 },
+    "MO": { "x": 0.5799180327868853, "y": 0.47842030599187896 },
+    "MT": { "x": 0.32126593806921677, "y": 0.17517630035013002 },
+    "NE": { "x": 0.4651639344262295, "y": 0.3754583877972386 },
+    "NV": { "x": 0.1819216757741348, "y": 0.39097319738821185 },
+    "NH": { "x": 0.892304189435337, "y": 0.22172072912304963 },
+    "NJ": { "x": 0.8640710382513661, "y": 0.35289139202855035 },
+    "NM": { "x": 0.340391621129326, "y": 0.5983074710130355 },
+    "NY": { "x": 0.8331056466302368, "y": 0.26403384618934017 },
+    "NC": { "x": 0.8094262295081968, "y": 0.5221438602937125 },
+    "ND": { "x": 0.4551457194899818, "y": 0.18363892376338814 },
+    "OH": { "x": 0.7283697632058288, "y": 0.39097319738821185 },
+    "OK": { "x": 0.49339708561020035, "y": 0.5715091635377182 },
+    "OR": { "x": 0.14275956284153005, "y": 0.22313116635859265 },
+    "PA": { "x": 0.8066939890710383, "y": 0.3430183313797492 },
+    "RI": { "x": 0.9005009107468124, "y": 0.28519040472248547 },
+    "SC": { "x": 0.7866575591985429, "y": 0.5926657220708634 },
+    "SD": { "x": 0.4615209471766849, "y": 0.2739069068381413 },
+    "TN": { "x": 0.677367941712204, "y": 0.5489421677690299 },
+    "TX": { "x": 0.46971766848816027, "y": 0.705500700914305 },
+    "UT": { "x": 0.2611566484517304, "y": 0.4248236910412443 },
+    "VT": { "x": 0.869535519125683, "y": 0.2118476684742485 },
+    "VA": { "x": 0.8012295081967213, "y": 0.4572637474587337 },
+    "WA": { "x": 0.16097449908925318, "y": 0.11734837369286627 },
+    "WV": { "x": 0.7675318761384335, "y": 0.4346967516900454 },
+    "WI": { "x": 0.613615664845173, "y": 0.2654442834248832 },
+    "WY": { "x": 0.340391621129326, "y": 0.31339914943334585 }
   };
 
-  // standard normaliserede koordinater (bliver erstattet, når du kalibrerer og opdaterer koden)
-  let STATE_POS_NORM = {};
-  for (const [abbr, pos] of Object.entries(STATE_POS_ASCII)) {
-    const [xAscii, yAscii] = pos;
-    const x = xAscii / (ASCII_WIDTH - 1);
-    const y = yAscii / (ASCII_HEIGHT - 1);
-    STATE_POS_NORM[abbr] = { x, y };
-  }
-
-  // feedback tekster
   const POSITIVE_FEEDBACK = [
     "Stærkt gættet.",
     "Lige i skabet.",
     "Det sad lige hvor det skulle.",
     "Yes, den sad der.",
-    "Godt set.",
+    "Godt set."
   ];
 
   const NEGATIVE_FEEDBACK = [
@@ -159,25 +173,21 @@
     "Den var svær - nu ved du det til næste gang.",
     "God træning, selv om den var forkert.",
     "Det er sådan her man lærer kortet at kende.",
-    "Fair nok, den snyder mange.",
+    "Fair nok, den snyder mange."
   ];
 
-  // ---- DOM ----
+  // --- DOM referencer ---
 
   const img = document.getElementById("us-map");
   const canvas = document.getElementById("overlay");
   const currentStateEl = document.getElementById("current-state");
   const feedbackEl = document.getElementById("feedback");
   const progressEl = document.getElementById("progress");
-  const calibrationHintEl = document.getElementById("calibration-hint");
 
   let ctx;
   let mapLoaded = false;
 
   // spiltilstand
-  const urlParams = new URLSearchParams(window.location.search);
-  const CALIBRATION_MODE = urlParams.get("calibrate") === "1";
-
   let roundNumber = 1;
   let roundStates = [];
   let roundIndex = 0;
@@ -185,10 +195,6 @@
   let roundQuestions = 0;
   let currentTarget = null;
   let waiting = false;
-
-  // kalibreringstilstand
-  let calibIndex = 0;
-  let calibPositions = {};
 
   function shuffle(arr) {
     const copy = arr.slice();
@@ -199,79 +205,6 @@
     return copy;
   }
 
-  // --------- KALIBRERING ---------
-
-  function startCalibration() {
-    document.title = "US States Quiz - Kalibrering";
-    calibrationHintEl.textContent =
-      "Kalibrering er slået til (?calibrate=1). Klik midten af hver stat i den rækkefølge, der bliver vist.";
-    feedbackEl.textContent = "";
-    progressEl.textContent = "";
-    calibIndex = 0;
-    calibPositions = {};
-    nextCalibrationStep();
-  }
-
-  function nextCalibrationStep() {
-    if (calibIndex >= ALL_ABBR.length) {
-      finishCalibration();
-      return;
-    }
-    const abbr = ALL_ABBR[calibIndex];
-    const name = STATE_NAMES[abbr] || abbr;
-    currentTarget = abbr;
-    currentStateEl.textContent =
-      `Kalibrering ${calibIndex + 1}/${ALL_ABBR.length}: Klik midten af ${name} (${abbr}).`;
-  }
-
-  function handleCalibrationClick(xPx, yPx) {
-    const abbr = currentTarget;
-    const nx = xPx / canvas.width;
-    const ny = yPx / canvas.height;
-    calibPositions[abbr] = { x: nx, y: ny };
-
-    // Tegn en lille rød markør
-    const r = Math.max(6, Math.min(canvas.width, canvas.height) * 0.012);
-    ctx.beginPath();
-    ctx.arc(xPx, yPx, r, 0, Math.PI * 2);
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,0,0,0.1)";
-    ctx.fill();
-    ctx.fillStyle = "red";
-    ctx.font = "10px Helvetica";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(abbr, xPx, yPx);
-
-    calibIndex += 1;
-    if (calibIndex < ALL_ABBR.length) {
-      nextCalibrationStep();
-    } else {
-      finishCalibration();
-    }
-  }
-
-  function finishCalibration() {
-    currentTarget = null;
-    currentStateEl.textContent = "Kalibrering færdig.";
-    feedbackEl.textContent =
-      "Åbn browserens konsol (Developer Tools) for at kopiere de nye koordinater.";
-    progressEl.textContent = "";
-
-    console.log("Kalibrering færdig. Her er dine koordinater til STATE_POS_NORM:");
-    console.log(JSON.stringify(calibPositions, null, 2));
-
-    alert(
-      "Kalibrering færdig.\n\n" +
-      "Åbn Developer Tools (Cmd+Alt+I på Mac), gå til Console,\n" +
-      "kopier JSON-objektet der bliver logget, og erstat STATE_POS_NORM i index.html med det."
-    );
-  }
-
-  // --------- QUIZ (runder á 10) ---------
-
   function startRound() {
     const allAbbr = STATES.map(([abbr]) => abbr);
     const shuffled = shuffle(allAbbr);
@@ -281,7 +214,6 @@
     roundQuestions = 0;
     document.title = `US States Quiz - Runde ${roundNumber}`;
     feedbackEl.textContent = "";
-    calibrationHintEl.textContent = "";
     clearOverlay();
     startNextQuestion();
   }
@@ -411,11 +343,7 @@
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    if (CALIBRATION_MODE) {
-      handleCalibrationClick(x, y);
-    } else {
-      handleQuizClick(x, y);
-    }
+    handleQuizClick(x, y);
   }
 
   // når kortet er indlæst, sæt canvas størrelse og start
@@ -432,13 +360,8 @@
     ctx = canvas.getContext("2d");
     mapLoaded = true;
 
-    if (CALIBRATION_MODE) {
-      currentStateEl.textContent = "Kort indlæst. Klar til kalibrering.";
-      startCalibration();
-    } else {
-      currentStateEl.textContent = "Kort indlæst. Klar til første runde.";
-      startRound();
-    }
+    currentStateEl.textContent = "Kort indlæst. Klar til første runde.";
+    startRound();
   });
 
   canvas.addEventListener("click", handleClick);
