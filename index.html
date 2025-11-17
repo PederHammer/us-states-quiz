@@ -36,7 +36,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      pointer-events: none; /* vi klikker på canvas, men tegner også her */
+      pointer-events: auto; /* vi klikker på canvas */
     }
     .info {
       margin-top: 12px;
@@ -86,8 +86,6 @@
 </div>
 
 <script>
-  // --- grunddata ---
-
   const STATES = [
     ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"],
     ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"],
@@ -103,10 +101,9 @@
     ["TX", "Texas"], ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"],
     ["WA", "Washington"], ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
   ];
-
   const STATE_NAMES = Object.fromEntries(STATES);
 
-  // DINE KALIBREREDE KOORDINATER
+  // DINE KOORDINATER 1:1
   const STATE_POS_NORM = {
     "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
     "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
@@ -176,8 +173,6 @@
     "Fair nok, den snyder mange."
   ];
 
-  // --- DOM referencer ---
-
   const img = document.getElementById("us-map");
   const canvas = document.getElementById("overlay");
   const currentStateEl = document.getElementById("current-state");
@@ -187,7 +182,6 @@
   let ctx;
   let mapLoaded = false;
 
-  // spiltilstand
   let roundNumber = 1;
   let roundStates = [];
   let roundIndex = 0;
@@ -215,6 +209,7 @@
     document.title = `US States Quiz - Runde ${roundNumber}`;
     feedbackEl.textContent = "";
     clearOverlay();
+    drawAllMarkers(); // så du visuelt kan se om kalibreringen passer
     startNextQuestion();
   }
 
@@ -266,9 +261,8 @@
   }
 
   function drawMarker(abbr, color = "black") {
-    if (!ctx) return;
     const pos = STATE_POS_NORM[abbr];
-    if (!pos) return;
+    if (!ctx || !pos) return;
     const x = pos.x * canvas.width;
     const y = pos.y * canvas.height;
     const r = Math.max(8, Math.min(canvas.width, canvas.height) * 0.015);
@@ -286,6 +280,14 @@
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(abbr, x, y);
+  }
+
+  function drawAllMarkers() {
+    for (const [abbr] of STATES) {
+      if (STATE_POS_NORM[abbr]) {
+        drawMarker(abbr, "black");
+      }
+    }
   }
 
   function findClickedState(xPx, yPx) {
@@ -326,6 +328,7 @@
         `${prefix} Du klikkede på ${clickedName} (${clickedAbbr}), men den rigtige var ${targetName} (${currentTarget}).`;
     }
 
+    // tegn den rigtige stat ekstra “tykt”
     drawMarker(currentTarget, "black");
     updateProgress();
 
@@ -338,15 +341,12 @@
 
   function handleClick(event) {
     if (!mapLoaded) return;
-
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-
     handleQuizClick(x, y);
   }
 
-  // når kortet er indlæst, sæt canvas størrelse og start
   img.addEventListener("load", () => {
     const w = img.clientWidth || img.naturalWidth;
     const h = img.clientHeight || img.naturalHeight;
@@ -355,7 +355,6 @@
     canvas.height = h;
     canvas.style.width = w + "px";
     canvas.style.height = h + "px";
-    canvas.style.pointerEvents = "auto";
 
     ctx = canvas.getContext("2d");
     mapLoaded = true;
