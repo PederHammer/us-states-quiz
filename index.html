@@ -301,24 +301,25 @@
     updateProgress();
   }
 
-  function endRound() {
-    const total = roundQuestions;
-    const correct = roundCorrect;
-    let msg = `Runde ${roundNumber} er færdig.\n\nDu ramte ${correct} ud af ${total} rigtigt.`;
-    }
-    msg += `\n\nVil du tage en runde mere?`;
+ function endRound() {
+  const total = roundQuestions;
+  const correct = roundCorrect;
 
-    const again = window.confirm(msg);
-    if (again) {
-      roundNumber += 1;
-      startRound();
-    } else {
-      currentStateEl.textContent = "Tak for spillet.";
-      feedbackEl.textContent = "";
-      progressEl.textContent = "";
-      currentTarget = null;
-    }
+  let msg = `Runde ${roundNumber} er færdig.\n\nDu ramte ${correct} ud af ${total} rigtigt.`;
+  msg += `\n\nVil du tage en runde mere?`;
+
+  const again = window.confirm(msg);
+  if (again) {
+    roundNumber += 1;
+    startRound();
+  } else {
+    currentStateEl.textContent = "Tak for spillet.";
+    feedbackEl.textContent = "";
+    progressEl.textContent = "";
+    currentTarget = null;
   }
+}
+
 
   function updateProgress() {
     progressEl.textContent =
