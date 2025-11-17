@@ -305,9 +305,6 @@
     const total = roundQuestions;
     const correct = roundCorrect;
     let msg = `Runde ${roundNumber} er færdig.\n\nDu ramte ${correct} ud af ${total} rigtigt.`;
-    if (total > 0) {
-      const pct = (100 * correct / total).toFixed(1);
-      msg += `\nDet svarer til ${pct} %.`;
     }
     msg += `\n\nVil du tage en runde mere?`;
 
