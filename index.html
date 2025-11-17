@@ -370,7 +370,7 @@
 function handleQuizClick(xPx, yPx) {
   if (!currentTarget || waiting) return;
 
-  waiting = true; // lås med det samme
+  waiting = true;
 
   const normX = xPx / canvas.width;
   const normY = yPx / canvas.height;
@@ -393,11 +393,10 @@ function handleQuizClick(xPx, yPx) {
     inRange = dist <= tol;
   }
 
-  // Øverste linje: hvad du faktisk klikkede på
   currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
 
-  // Anden linje: rigtigt / forkert
   if (clickedAbbr === currentTarget && inRange) {
+    **roundCorrect += 1;**   // ← denne linje er den vigtige
     const prefix =
       POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
     feedbackEl.textContent =
@@ -409,7 +408,6 @@ function handleQuizClick(xPx, yPx) {
       `${prefix} Den rigtige var ${targetName} (${currentTarget}).`;
   }
 
-  // Tredje linje: fun fact om navnets oprindelse
   if (funfact) {
     feedbackEl.textContent += `\nNavne-oprindelse: ${funfact}`;
   }
@@ -417,12 +415,12 @@ function handleQuizClick(xPx, yPx) {
   drawMarker(currentTarget, "black");
   updateProgress();
 
-  // Du har sat 9000 ms - det lader jeg være, så teksten står længe
   setTimeout(() => {
     waiting = false;
     startNextQuestion();
   }, 9000);
 }
+
 
   function handleClick(event) {
     if (!mapLoaded) return;
