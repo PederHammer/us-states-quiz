@@ -82,8 +82,8 @@
   </p>
 </div>
 
-<script>
-  <script>
+
+ <script>
   const STATES = [
     ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"],
     ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"],
@@ -102,7 +102,6 @@
 
   const STATE_NAMES = Object.fromEntries(STATES);
 
-  // Koordinaterne du har kalibreret
   const STATE_POS_NORM = {
     "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
     "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
@@ -156,10 +155,8 @@
     "WY": { "x": 0.340391621129326, "y": 0.31339914943334585 }
   };
 
-  // Standard-tolerance (normaliseret afstand). Mindre tal = strengere.
+  // Tolerancer
   const DEFAULT_TOL = 0.06;
-
-  // Mindre tolerance for små stater
   const SMALL_STATE_TOL = 0.03;
   const STATE_TOL = {
     RI: SMALL_STATE_TOL,
@@ -172,7 +169,6 @@
     NH: SMALL_STATE_TOL,
     HI: SMALL_STATE_TOL
   };
-
   function getTolerance(abbr) {
     return STATE_TOL[abbr] || DEFAULT_TOL;
   }
@@ -316,8 +312,8 @@
   function handleQuizClick(xPx, yPx) {
     if (!currentTarget || waiting) return;
 
-    const rectNormX = xPx / canvas.width;
-    const rectNormY = yPx / canvas.height;
+    const normX = xPx / canvas.width;
+    const normY = yPx / canvas.height;
 
     const clickedAbbr = findClickedState(xPx, yPx);
     const clickedName = STATE_NAMES[clickedAbbr] || clickedAbbr;
@@ -325,26 +321,29 @@
 
     roundQuestions += 1;
 
-    // Beregn afstand til målstat i det normaliserede koordinatsystem
+    // afstand til målstat
     const targetPos = STATE_POS_NORM[currentTarget];
     let inRange = false;
     if (targetPos) {
-      const dxT = rectNormX - targetPos.x;
-      const dyT = rectNormY - targetPos.y;
+      const dxT = normX - targetPos.x;
+      const dyT = normY - targetPos.y;
       const dist = Math.sqrt(dxT * dxT + dyT * dyT);
       const tol = getTolerance(currentTarget);
       inRange = dist <= tol;
     }
 
+    // Vis tydeligt hvad brugeren faktisk klikkede på
+    currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
+
     if (clickedAbbr === currentTarget && inRange) {
       roundCorrect += 1;
       const prefix = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
       feedbackEl.textContent =
-        `${prefix} Du klikkede på ${clickedName} (${clickedAbbr}), og det var rigtigt.`;
+        `${prefix} Det var rigtigt – den stat er ${targetName} (${currentTarget}).`;
     } else {
       const prefix = NEGATIVE_FEEDBACK[Math.floor(Math.random() * NEGATIVE_FEEDBACK.length)];
       feedbackEl.textContent =
-        `${prefix} Du klikkede på ${clickedName} (${clickedAbbr}), men den rigtige var ${targetName} (${currentTarget}).`;
+        `${prefix} Den rigtige var ${targetName} (${currentTarget}).`;
     }
 
     drawMarker(currentTarget, "black");
@@ -354,7 +353,7 @@
     setTimeout(() => {
       waiting = false;
       startNextQuestion();
-    }, 1100);
+    }, 3000); // ca. 3 sekunders pause
   }
 
   function handleClick(event) {
@@ -390,7 +389,7 @@
     const ev = new Event("load");
     img.dispatchEvent(ev);
   }
-
 </script>
+
 </body>
 </html>
