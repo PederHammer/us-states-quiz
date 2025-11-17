@@ -27,7 +27,7 @@
       line-height: 0;
     }
     #us-map {
-      display: block; /* ingen max-width, ingen autoskalering */
+      display: block;
     }
     #overlay {
       position: absolute;
@@ -101,7 +101,6 @@
 
   const STATE_NAMES = Object.fromEntries(STATES);
 
-  // DINE KALIBREREDE KOORDINATER
   const STATE_POS_NORM = {
     "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
     "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
@@ -207,7 +206,6 @@
     document.title = `US States Quiz - Runde ${roundNumber}`;
     feedbackEl.textContent = "";
     clearOverlay();
-    drawAllMarkers();
     startNextQuestion();
   }
 
@@ -263,27 +261,16 @@
     if (!ctx || !pos) return;
     const x = pos.x * canvas.width;
     const y = pos.y * canvas.height;
-    const r = Math.max(8, Math.min(canvas.width, canvas.height) * 0.015);
+    const r = Math.max(6, Math.min(canvas.width, canvas.height) * 0.012);
 
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = color;
     ctx.stroke();
-
-    ctx.fillStyle = color;
-    ctx.font = "10px Helvetica";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(abbr, x, y);
-  }
-
-  function drawAllMarkers() {
-    for (const [abbr] of STATES) {
-      if (STATE_POS_NORM[abbr]) drawMarker(abbr, "black");
-    }
+    // ingen tekst - bare en markering
   }
 
   function findClickedState(xPx, yPx) {
@@ -343,7 +330,6 @@
   }
 
   img.addEventListener("load", () => {
-    // lås billedet til dets naturlige størrelse
     const w = img.naturalWidth;
     const h = img.naturalHeight;
 
