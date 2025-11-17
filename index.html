@@ -13,8 +13,6 @@
       justify-content: center;
     }
     .wrapper {
-      max-width: 1100px;
-      width: 100%;
       padding: 20px;
     }
     h1 {
@@ -26,17 +24,16 @@
       display: inline-block;
       border: 1px solid #ccc;
       background: #fff;
+      line-height: 0;
     }
     #us-map {
-      display: block;
-      max-width: 100%;
-      height: auto;
+      display: block; /* ingen max-width, ingen autoskalering */
     }
     #overlay {
       position: absolute;
       left: 0;
       top: 0;
-      pointer-events: auto; /* vi klikker på canvas */
+      pointer-events: auto;
     }
     .info {
       margin-top: 12px;
@@ -101,9 +98,10 @@
     ["TX", "Texas"], ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"],
     ["WA", "Washington"], ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
   ];
+
   const STATE_NAMES = Object.fromEntries(STATES);
 
-  // DINE KOORDINATER 1:1
+  // DINE KALIBREREDE KOORDINATER
   const STATE_POS_NORM = {
     "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
     "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
@@ -209,7 +207,7 @@
     document.title = `US States Quiz - Runde ${roundNumber}`;
     feedbackEl.textContent = "";
     clearOverlay();
-    drawAllMarkers(); // så du visuelt kan se om kalibreringen passer
+    drawAllMarkers();
     startNextQuestion();
   }
 
@@ -284,9 +282,7 @@
 
   function drawAllMarkers() {
     for (const [abbr] of STATES) {
-      if (STATE_POS_NORM[abbr]) {
-        drawMarker(abbr, "black");
-      }
+      if (STATE_POS_NORM[abbr]) drawMarker(abbr, "black");
     }
   }
 
@@ -328,7 +324,6 @@
         `${prefix} Du klikkede på ${clickedName} (${clickedAbbr}), men den rigtige var ${targetName} (${currentTarget}).`;
     }
 
-    // tegn den rigtige stat ekstra “tykt”
     drawMarker(currentTarget, "black");
     updateProgress();
 
@@ -348,8 +343,12 @@
   }
 
   img.addEventListener("load", () => {
-    const w = img.clientWidth || img.naturalWidth;
-    const h = img.clientHeight || img.naturalHeight;
+    // lås billedet til dets naturlige størrelse
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+
+    img.style.width = w + "px";
+    img.style.height = "auto";
 
     canvas.width = w;
     canvas.height = h;
@@ -366,8 +365,8 @@
   canvas.addEventListener("click", handleClick);
 
   if (img.complete && img.naturalWidth > 0) {
-    const event = new Event("load");
-    img.dispatchEvent(event);
+    const ev = new Event("load");
+    img.dispatchEvent(ev);
   }
 </script>
 </body>
