@@ -83,6 +83,7 @@
 </div>
 
 <script>
+  <script>
   const STATES = [
     ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"],
     ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"],
@@ -101,6 +102,7 @@
 
   const STATE_NAMES = Object.fromEntries(STATES);
 
+  // Koordinaterne du har kalibreret
   const STATE_POS_NORM = {
     "AL": { "x": 0.6837431693989071, "y": 0.6490832114925842 },
     "AK": { "x": 0.20013661202185792, "y": 0.8098730563444883 },
@@ -153,6 +155,27 @@
     "WI": { "x": 0.613615664845173, "y": 0.2654442834248832 },
     "WY": { "x": 0.340391621129326, "y": 0.31339914943334585 }
   };
+
+  // Standard-tolerance (normaliseret afstand). Mindre tal = strengere.
+  const DEFAULT_TOL = 0.06;
+
+  // Mindre tolerance for små stater
+  const SMALL_STATE_TOL = 0.03;
+  const STATE_TOL = {
+    RI: SMALL_STATE_TOL,
+    DE: SMALL_STATE_TOL,
+    CT: SMALL_STATE_TOL,
+    NJ: SMALL_STATE_TOL,
+    MD: SMALL_STATE_TOL,
+    MA: SMALL_STATE_TOL,
+    VT: SMALL_STATE_TOL,
+    NH: SMALL_STATE_TOL,
+    HI: SMALL_STATE_TOL
+  };
+
+  function getTolerance(abbr) {
+    return STATE_TOL[abbr] || DEFAULT_TOL;
+  }
 
   const POSITIVE_FEEDBACK = [
     "Stærkt gættet.",
@@ -270,7 +293,6 @@
     ctx.lineWidth = 2;
     ctx.strokeStyle = color;
     ctx.stroke();
-    // ingen tekst - bare en markering
   }
 
   function findClickedState(xPx, yPx) {
@@ -294,13 +316,27 @@
   function handleQuizClick(xPx, yPx) {
     if (!currentTarget || waiting) return;
 
+    const rectNormX = xPx / canvas.width;
+    const rectNormY = yPx / canvas.height;
+
     const clickedAbbr = findClickedState(xPx, yPx);
     const clickedName = STATE_NAMES[clickedAbbr] || clickedAbbr;
     const targetName = STATE_NAMES[currentTarget] || currentTarget;
 
     roundQuestions += 1;
 
-    if (clickedAbbr === currentTarget) {
+    // Beregn afstand til målstat i det normaliserede koordinatsystem
+    const targetPos = STATE_POS_NORM[currentTarget];
+    let inRange = false;
+    if (targetPos) {
+      const dxT = rectNormX - targetPos.x;
+      const dyT = rectNormY - targetPos.y;
+      const dist = Math.sqrt(dxT * dxT + dyT * dyT);
+      const tol = getTolerance(currentTarget);
+      inRange = dist <= tol;
+    }
+
+    if (clickedAbbr === currentTarget && inRange) {
       roundCorrect += 1;
       const prefix = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
       feedbackEl.textContent =
@@ -354,6 +390,7 @@
     const ev = new Event("load");
     img.dispatchEvent(ev);
   }
+
 </script>
 </body>
 </html>
