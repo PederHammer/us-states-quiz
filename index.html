@@ -247,6 +247,8 @@
   const canvas = document.getElementById("overlay");
   const currentStateEl = document.getElementById("current-state");
   const feedbackEl = document.getElementById("feedback");
+   feedbackEl.style.whiteSpace = "pre-line";
+
   const progressEl = document.getElementById("progress");
 
   let ctx;
@@ -363,7 +365,7 @@
     return bestAbbr;
   }
 
-  function handleQuizClick(xPx, yPx) {
+function handleQuizClick(xPx, yPx) {
   if (!currentTarget || waiting) return;
 
   waiting = true; // lås med det samme
@@ -374,6 +376,7 @@
   const clickedAbbr = findClickedState(xPx, yPx);
   const clickedName = STATE_NAMES[clickedAbbr] || clickedAbbr;
   const targetName = STATE_NAMES[currentTarget] || currentTarget;
+  const funfact = STATE_FUNFACT[currentTarget] || "";
 
   roundQuestions += 1;
 
@@ -388,28 +391,37 @@
     inRange = dist <= tol;
   }
 
-  // VIS hvad brugeren ramte og lad det stå i 3 sekunder
+  // Øverste linje: hvad du faktisk klikkede på
   currentStateEl.textContent = `Du klikkede på ${clickedName} (${clickedAbbr}).`;
 
+  // Anden linje: rigtigt / forkert
   if (clickedAbbr === currentTarget && inRange) {
-    roundCorrect += 1;
-    const prefix = POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
+    const prefix =
+      POSITIVE_FEEDBACK[Math.floor(Math.random() * POSITIVE_FEEDBACK.length)];
     feedbackEl.textContent =
-      `${prefix} Det var rigtigt – ${targetName} (${currentTarget}).`;
+      `${prefix} Det var rigtigt - ${targetName} (${currentTarget}).`;
   } else {
-    const prefix = NEGATIVE_FEEDBACK[Math.floor(Math.random() * NEGATIVE_FEEDBACK.length)];
+    const prefix =
+      NEGATIVE_FEEDBACK[Math.floor(Math.random() * NEGATIVE_FEEDBACK.length)];
     feedbackEl.textContent =
       `${prefix} Den rigtige var ${targetName} (${currentTarget}).`;
+  }
+
+  // Tredje linje: fun fact om navnets oprindelse
+  if (funfact) {
+    feedbackEl.textContent += `\nNavne-oprindelse: ${funfact}`;
   }
 
   drawMarker(currentTarget, "black");
   updateProgress();
 
-  // Tving 3 sekunders pause uden mulighed for at skippe
+  // Du har sat 9000 ms - det lader jeg være, så teksten står længe
   setTimeout(() => {
     waiting = false;
     startNextQuestion();
   }, 9000);
+}
+
 }
 
 
